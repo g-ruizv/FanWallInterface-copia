@@ -17,7 +17,7 @@
         </div>
         <div class="col-md-6">
             <button class="btn btn-primary mr-2" onclick="startProcedure()">Start Procedure</button>
-            <button class="btn btn-danger" onclick="getAllControllers()">Cancel Procedure</button>
+            <button class="btn btn-danger" onclick="getAllControllers()">Get controllers</button>
             <button class="btn btn-danger" onclick="cancelProcedure()">Cancel Procedure</button>
         </div>
         <div class="container mt-5">
@@ -29,7 +29,7 @@
     </div>
 
     <script>
-        var controllerIds = ["id1","id2"];
+        var controllerIds = [];
 
 
 
@@ -66,6 +66,8 @@
             if (message.destinationName === 'fanWall/wall/id' && message.payloadString !=='get') {
                 console.log('Received ID: ' + message.payloadString);
                 controllerIds.push(message.payloadString);
+                console.log(controllerIds);
+                updateSliders();
             }
         };
         updateSliders();
@@ -84,6 +86,7 @@
             //    setSpeed(value,controllerIds[i]);
             //}
             setSpeed(value,id);
+            
         }
 
         function setSpeed(speed,id) {
