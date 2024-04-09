@@ -1,5 +1,32 @@
 <!DOCTYPE html>
 <html lang="en">
+    <script src="./static/node_modules/gridstack/dist/gridstack-all.js"></script>
+    <link href="./static/node_modules/gridstack/dist/gridstack.min.css" rel="stylesheet"/>
+<style type="text/css">
+    .grid-stack { 
+    background: #e9e9e9; 
+    border: 3px solid #000;
+    padding: 3px;
+    border-radius: 10px; /* Rounded edges */
+
+    }
+    .grid-stack-item-content {
+      border: 1px solid #ccc;
+      padding: 10px;
+    }
+
+    .square-wrapper {
+      width: 80px; /* Fixed width */
+      height: 80px; /* Fixed height to create a square */
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      border: 3px solid #000;
+      background-color: aqua;
+      padding: 3px;
+      border-radius: 10px; /* Rounded edges */
+    }
+</style>
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -27,9 +54,26 @@
             <p id="sliderValue"></p>
           </div>
     </div>
+    <button onclick="exportGridAsMatrix()">Export Grid IDs</button>
+    <div class="grid-stack" gs-w="3" gs-min-row="12"></div>
 
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
     <script>
-        var controllerIds = [];
+        
+        var options = {
+            cellHeight: 80,
+
+            verticalMargin: 10,
+            
+            width: 12,
+            minHeight: 4,
+            float: true,
+
+        };
+        
+
+        var grid = GridStack.init(options);
+        var controllerIds = ["id1","id2","id3"];
 
 
 
@@ -65,9 +109,14 @@
             console.log(message.payloadString);
             if (message.destinationName === 'fanWall/wall/id' && message.payloadString !=='get') {
                 console.log('Received ID: ' + message.payloadString);
-                controllerIds.push(message.payloadString);
-                console.log(controllerIds);
-                updateSliders();
+
+                if (!controllerIds.includes(message.payloadString)){
+                    controllerIds.push(message.payloadString);
+                    controllerIds.push("aaa");
+                    console.log(controllerIds);
+                    updateSliders();
+                }
+
             }
         };
         updateSliders();
@@ -90,9 +139,12 @@
         }
 
         function setSpeed(speed,id) {
+            var destinationTopic = 'fanWall/wall/'+id;
+            console.log(destinationTopic)
+            mqttClient.subscribe(destinationTopic);
             console.log('Setting speed to ' + speed);
-            var message = new Paho.MQTT.Message(id + '/' + speed);
-            message.destinationName = 'fanWall/wall/control';
+            var message = new Paho.MQTT.Message(speed);
+            message.destinationName = destinationTopic;
             mqttClient.send(message);
         }	
 
@@ -128,11 +180,36 @@
                 slider.value = "50";
                 slider.id = id;
                 slider.onmouseup = function() {
+                    console.log(id);
                     getValue(id);
                 };
-                document.getElementById("sliderContainer").appendChild(slider);
+                //document.getElementById("sliderContainer").appendChild(slider);
+                var itemHtml = '<div class="square-wrapper"><label for="' + id + '">' + id + '</label><input type="range" min="0" max="100" value="50" class="slider" id="' + id + '"></div>';
+                grid.addWidget(itemHtml, {w: 2, h: 2, noResize: true});
             });
         }
+        $(document).on('mouseup', '.slider', function() {
+            var id = $(this).attr('id');
+            getValue(id);
+        });
+
+        window.exportGridAsMatrix = function() {
+            var gridMatrix = [];
+            var items = grid.engine.nodes;
+
+            items.forEach(function(item) {
+                var x = item.x;
+                var y = item.y;
+                var width = item.width;
+                var height = item.height;
+                var id = "1"
+                var cell = { id: id, x: x, y: y, width: width, height: height };
+                gridMatrix.push(cell);
+            });
+
+            console.log('Grid Matrix:', gridMatrix);
+        };
+        
 
     </script>
 </body>
