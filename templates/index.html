@@ -66,7 +66,6 @@
         </div>
     </div>
 
-    
     <script>
         
         var options = {
@@ -75,14 +74,11 @@
             width: 12,
             minHeight: 4,
             float: true,
-
         };
         
-
         var grid = GridStack.init(options);
         var controllerIds = ["id1","id2","id3"];
         getConfigurations();
-
 
         var mqttClient = new Paho.MQTT.Client('broker.hivemq.com', 8000, '5a0d6a66b35b476a8653e7edb84528df');
 
@@ -116,7 +112,6 @@
             console.log(message.payloadString);
             if (message.destinationName === 'fanWall/wall/id' && message.payloadString !=='get') {
                 console.log('Received ID: ' + message.payloadString);
-
                 if (!controllerIds.includes(message.payloadString)){
                     controllerIds.push(message.payloadString);
                     console.log(controllerIds);
@@ -125,23 +120,39 @@
 
             }
         };
+
+        function addController(id, controllerName) {
+            const postData = {
+                name: controllerName
+            };
+
+            fetch(`/api/v1/fanWall/controllers/${id}`, {
+                method: 'POST',
+                headers: {
+                'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(postData)
+            })
+            .then(response => {
+                if (!response.ok) {
+                throw new Error('Network response was not ok');
+                }
+                return response.json();
+            })
+            .then(data => {
+                console.log('Response from server:', data);
+            })
+            .catch(error => {
+                console.error('There was a problem with the fetch operation:', error);
+            });
+        }
         updateSliders();
         function getValue(id) {
             console.log(id);
-            // Get the slider element
             var slider = document.getElementById(id);
-            // Get the value of the slider
             var value = slider.value;
-            // Display the value
-            //document.getElementById("sliderValue").innerHTML = "Slider Value: " + value;
-            // Call a function or perform any action with the value here
-            // For example, you can pass the value to another function
             console.log('Slider value: ' + value);
-            //for (var i = 0; i < controllerIds.length; i++) {
-            //    setSpeed(value,controllerIds[i]);
-            //}
             setSpeed(value,id);
-            
         }
 
         function setSpeed(speed,id) {
@@ -191,7 +202,7 @@
                 };
                 //document.getElementById("sliderContainer").appendChild(slider);
                 var itemHtml = '<div class="square-wrapper"><label for="' + id + '">' + id + '</label><input type="range" min="0" max="100" value="50" class="slider" id="' + id + '"></div>';
-                grid.addWidget(itemHtml, {w: 2, h: 2, noResize: true});
+                grid.addWidget(itemHtml, {w: 2, h: 2, id:id ,noResize: true});
             });
         }
         $(document).on('mouseup', '.slider', function() {
@@ -206,14 +217,13 @@
             items.forEach(function(item) {
                 var x = item.x;
                 var y = item.y;
-                var width = item.width;
-                var height = item.height;
-                var id = "1"
-                var cell = { id: id, x: x, y: y, width: width, height: height };
+                var id = item.id;
+                var cell = { id: id, x: x, y: y};
                 gridMatrix.push(cell);
             });
 
             console.log('Grid Matrix:', gridMatrix);
+
         };
 
         function getConfigurations() {
