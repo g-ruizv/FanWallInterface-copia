@@ -2,14 +2,35 @@ from flask import Flask
 from flask import render_template, request
 from flask_cors import CORS, cross_origin
 from flask_sqlalchemy import SQLAlchemy
+from flask_socketio import SocketIO, emit
+import paho.mqtt.client as mqtt
+import threading
 from sqlalchemy import inspect
 
 
 app = Flask(__name__)
+
+def on_connect(client, userdata, flags, reason_code, properties):
+    print(f"Connected with result code {reason_code}")
+    # Subscribing in on_connect() means that if we lose the connection and
+    # reconnect then subscriptions will be renewed.
+    client.subscribe('fanWall/wall/control')
+    client.subscribe('fanWall/wall/status')
+    client.subscribe('fanWall/wall/id')
+
+# The callback for when a PUBLISH message is received from the server.
+def on_message(client, userdata, msg):
+    if msg.topic == 'fanWall/wall/id' and msg.payload != 'get':
+        emit('fanId', {'id': msg.payload.decode('utf-8')})
+
+
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///test.db'
 db = SQLAlchemy(app)
-cors = CORS(app)
 app.config['CORS_HEADERS'] = 'Content-Type'
+socketio = SocketIO(app)
+mqtt_client = mqtt.Client(mqtt.CallbackAPIVersion.VERSION2)
+cors = CORS(app)
+
 
 controllers_configurations  = db.Table('controllers_configurations',
     db.Column('controller_id', db.String(80), db.ForeignKey('controller.id'), primary_key=True),
@@ -52,7 +73,12 @@ with app.app_context():
 
 @app.route('/')
 def index():
+    #emit('message', {'type': 'status_update', 'data': 'Fan is running'})
     return render_template('index.html')
+
+@app.route('/buh', methods=['GET'])
+def buh():
+    emit('message', {'type': 'status_update', 'data': 'Fan is running'})
 
 @app.route('/api/v1/fanWall/controllers', methods=['GET'])
 @cross_origin()
@@ -87,6 +113,7 @@ def delete_controller(id):
 @cross_origin()
 def get_configurations():
     configurations = Configuration.query.all()
+    #emit('message', {'type': 'status_update', 'data': 'Fan is running'})
     return {'configurations': [configuration.name for configuration in configurations]}
 
 @app.route('/api/v1/fanWall/configurations/<id>', methods=['POST'])
@@ -206,6 +233,52 @@ def get_controller_from_configuration(config_id, controller_id):
         'y_coordinate': controller_coord.y_coordinate
     }
 
+def send_mqtt_message(topic, message,client):
+    with app.app_context():
+        print(f"Sending message to {topic}: {message}")
+        client.publish(topic, message)
+
+
+def mqtt_thread():
+    mqtt_client.on_connect = on_connect
+    mqtt_client.on_message = on_message
+    mqtt_client.connect('broker.hivemq.com', 1883)
+    print("Connected to MQTT broker")
+    mqtt_client.loop_forever()
+
+def start_mqtt():
+    mqtt_thread_instance = threading.Thread(target=mqtt_thread)
+    mqtt_thread_instance.daemon = True
+    mqtt_thread_instance.start()
+
+@socketio.on('fanControl')
+def handle_message(message):
+    message_type = message.get('type')
+    message_data = message.get('data')
+    print('Received message:', message)
+
+    if message_type == 'controller_information':
+        print('Received controller information:', message_data)
+        if message_data == 'get':
+            send_mqtt_message('fanWall/wall/id', 'get', mqtt_client)
+
+    elif message_type == 'command':
+        print('Received command:', message_data)
+        fanId = message_data.get('id')
+        fanSpeed = message_data.get('speed')
+        fanTopic = 'fanWall/wall/' + fanId
+        send_mqtt_message(fanTopic, fanSpeed, mqtt_client)
+        # Handle command
+    elif message_type == 'config_update':
+        print('Received config update:', message_data)
+        # Handle configuration update
+    else:
+        print('Unknown message type')
+
 
 if __name__ == '__main__':
-    app.run(debug=True)
+    start_mqtt()
+    socketio.run(app, debug=True, host='0.0.0.0', port=5000)
+    
+    
+

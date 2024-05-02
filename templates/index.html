@@ -7,7 +7,7 @@
     background: #e9e9e9; 
     border: 3px solid #000;
     padding: 3px;
-    border-radius: 10px; /* Rounded edges */
+    border-radius: 5px; /* Rounded edges */
 
     }
     .grid-stack-item-content {
@@ -16,16 +16,36 @@
     }
 
     .square-wrapper {
-      width: 80px; /* Fixed width */
-      height: 80px; /* Fixed height to create a square */
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      border: 3px solid #000;
-      background-color: aqua;
-      padding: 3px;
-      border-radius: 10px; /* Rounded edges */
+        width: 80px; /* Fixed width */
+        height: 80px; /* Fixed height to create a square */
+        text-align: center; /* Center-align the content */
+        margin: 0 auto; /* Center the square horizontally */
+        justify-content: center;
+        align-items: center;
+        border: 2px solid #000;
+        background-color: rgb(163, 163, 163);
+        padding: 10px;
+        border-radius: 5px; /* Rounded edges */
     }
+    
+    .slider-container {
+    margin-bottom: 10px;
+    position: absolute; /* Position the slider container */
+    top: 50%; /* Position it at 50% from the top */
+    left: 50%; /* Position it at 50% from the left */
+    transform: translate(-50%, -50%); /* Center the container */
+    }
+
+    .slider-label {
+    display: block;
+    margin-bottom: 5px;
+    }
+
+    .slider {
+    width: 75%;
+    margin: 0 auto;
+    }
+
 </style>
 <head>
     <meta charset="UTF-8">
@@ -36,6 +56,7 @@
     <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
     <!-- Paho JavaScript MQTT Library -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/paho-mqtt/1.0.1/mqttws31.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.7.2/socket.io.js"></script>
 </head>
 <body class="container mt-6">
     <h1 class="mb-4">FanWall</h1>
@@ -67,7 +88,6 @@
     </div>
 
     <script>
-        
         var options = {
             cellHeight: 80,
             verticalMargin: 10,
@@ -75,10 +95,48 @@
             minHeight: 4,
             float: true,
         };
+
+        const MessageType = {
+            STATUS_UPDATE: 'status_update',
+            COMMAND: 'command',
+            CONFIG_UPDATE: 'config_update',
+            CONTROLLER_INFORMATION: 'controller_information',
+            // Add more message types as needed
+        };
+
+        function createMessage(type, data) {
+            return {
+                type: type,
+                data: data
+            };
+        }
+        
         
         var grid = GridStack.init(options);
         var controllerIds = ["id1","id2","id3"];
         getConfigurations();
+
+        socket = io.connect('http://' + document.domain + ':' + location.port);
+        socket.on('connect', function() {
+            console.log('Connected to server');
+            socket.emit('my event', {data: 'I\'m connected!'});
+        });
+        socket.on('message', function(message) {
+            // Handle incoming messages
+            console.log('Received message:', message);
+        });
+
+        socket.on('fanId', function(data) {
+            var id = data.id;
+            console.log('Received ID:', id);
+
+            // Handle ID received, similar to MQTT logic
+            if (!controllerIds.includes(id)) {
+                controllerIds.push(id);
+                console.log(controllerIds);
+                updateSliders();
+            }
+        });
 
         var mqttClient = new Paho.MQTT.Client('broker.hivemq.com', 8000, '5a0d6a66b35b476a8653e7edb84528df');
 
@@ -115,7 +173,7 @@
                 if (!controllerIds.includes(message.payloadString)){
                     controllerIds.push(message.payloadString);
                     console.log(controllerIds);
-                    updateSliders();
+                    addSlider(message.payloadString);
                 }
 
             }
@@ -152,7 +210,18 @@
             var slider = document.getElementById(id);
             var value = slider.value;
             console.log('Slider value: ' + value);
-            setSpeed(value,id);
+            //setSpeed(value,id);
+            setSpeedSocket(value,id);
+        }
+
+        function setSpeedSocket(speed,id) {
+            const message = createMessage(MessageType.COMMAND, {
+                id: id,
+                speed: speed
+            });
+            socket.emit('fanControl', message);
+            console.log('Sending message:', message);
+            
         }
 
         function setSpeed(speed,id) {
@@ -170,44 +239,44 @@
             var message = new Paho.MQTT.Message(command);
             message.destinationName = 'fanWall/wall/control';
             mqttClient.send(message);
+            //const startProcedure = createMessage(MessageType.COMMAND, command);
+            //socket.emit('fanControl', startProcedure);
         }
 
-        function cancelProcedure() {
-            var random = Math.floor(Math.random() * 4000);
-            var command = random.toString();
-            console.log(command);
-            var message = new Paho.MQTT.Message(command);
-            message.destinationName = 'fanWall/wall/control';
-            mqttClient.send(message);
-        }
 
         function getAllControllers() {
             var message = new Paho.MQTT.Message('get');
             controllerIds = [];
             message.destinationName = 'fanWall/wall/id';
-            mqttClient.send(message);
+            //mqttClient.send(message);
+            const getControllers = createMessage(MessageType.CONTROLLER_INFORMATION,'get');
+            socket.emit('fanControl', getControllers);
         }
 
         function updateSliders(){
             controllerIds.forEach(function(id){
-                var slider = document.createElement("input");
-                slider.type = "range";
-                slider.min = "0";
-                slider.max = "100";
-                slider.value = "50";
-                slider.id = id;
-                slider.onmouseup = function() {
-                    console.log(id);
-                    getValue(id);
-                };
-                //document.getElementById("sliderContainer").appendChild(slider);
-                var itemHtml = '<div class="square-wrapper"><label for="' + id + '">' + id + '</label><input type="range" min="0" max="100" value="50" class="slider" id="' + id + '"></div>';
-                grid.addWidget(itemHtml, {w: 2, h: 2, id:id ,noResize: true});
+                addSlider(id);
             });
         }
+
+        function addSlider(id){
+            var slider = document.createElement("input");
+            slider.type = "range";
+            slider.min = "0";
+            slider.max = "100";
+            slider.value = "50";
+            slider.id = "slider";
+            slider.onmouseup = function() {
+                getValue();
+            };
+            var itemHtml = '<div class="square-wrapper"><br><br><label class="slider-label" for="' + id + '">' + id + '</label><input type="range" min="0" max="100" value="50" class="slider" id="' + id + '"></div>';
+            grid.addWidget(itemHtml, {w: 2, h: 2, id:id ,noResize: true});
+        }
+
         $(document).on('mouseup', '.slider', function() {
             var id = $(this).attr('id');
             getValue(id);
+
         });
 
         window.exportGridAsMatrix = function() {
