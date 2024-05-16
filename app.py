@@ -251,6 +251,13 @@ def start_mqtt():
     mqtt_thread_instance.daemon = True
     mqtt_thread_instance.start()
 
+def mqtt_start():
+    mqtt_client.on_connect = on_connect
+    mqtt_client.on_message = on_message
+    mqtt_client.connect('broker.hivemq.com', 1883)
+    print("Connected to MQTT broker")
+    mqtt_client.loop_start()
+
 @socketio.on('fanControl')
 def handle_message(message):
     message_type = message.get('type')
@@ -277,7 +284,7 @@ def handle_message(message):
 
 
 if __name__ == '__main__':
-    start_mqtt()
+    mqtt_start()
     socketio.run(app, debug=True, host='0.0.0.0', port=5000)
     
     

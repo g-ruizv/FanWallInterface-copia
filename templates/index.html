@@ -224,6 +224,15 @@
             
         }
 
+        function addControllerSocket(id, controllerName) {
+            const message = createMessage(MessageType.CONTROLLER_INFORMATION, {
+                id: id,
+                name: controllerName
+            });
+            socket.emit('fanControl', message);
+            console.log('Sending message:', message);
+        }
+
         function setSpeed(speed,id) {
             var destinationTopic = 'fanWall/wall/'+id;
             console.log(destinationTopic)
