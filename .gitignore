@@ -160,3 +160,4 @@ cython_debug/
 #.idea/
 
 static/node_modules/
+app/static/node_modules/
