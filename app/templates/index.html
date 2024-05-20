@@ -2,58 +2,18 @@
 <html lang="en">
     <script src="./static/node_modules/gridstack/dist/gridstack-all.js"></script>
     <link href="./static/node_modules/gridstack/dist/gridstack.min.css" rel="stylesheet"/>
-<style type="text/css">
-    .grid-stack { 
-    background: #e9e9e9; 
-    border: 3px solid #000;
-    padding: 3px;
-    border-radius: 5px; /* Rounded edges */
-
-    }
-    .grid-stack-item-content {
-      border: 1px solid #ccc;
-      padding: 10px;
-    }
-
-    .square-wrapper {
-        width: 80px; /* Fixed width */
-        height: 80px; /* Fixed height to create a square */
-        text-align: center; /* Center-align the content */
-        margin: 0 auto; /* Center the square horizontally */
-        justify-content: center;
-        align-items: center;
-        border: 2px solid #000;
-        background-color: rgb(163, 163, 163);
-        padding: 10px;
-        border-radius: 5px; /* Rounded edges */
-    }
-    
-    .slider-container {
-    margin-bottom: 10px;
-    position: absolute; /* Position the slider container */
-    top: 50%; /* Position it at 50% from the top */
-    left: 50%; /* Position it at 50% from the left */
-    transform: translate(-50%, -50%); /* Center the container */
-    }
-
-    .slider-label {
-    display: block;
-    margin-bottom: 5px;
-    }
-
-    .slider {
-    width: 75%;
-    margin: 0 auto;
-    }
-
-</style>
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>FanWall</title>
+    <link href ="./static/css/index.css" rel="stylesheet"/>
     <!-- Bootstrap CSS -->
     <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
-    <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+    <link href="./static/node_modules/bootstrap/dist/css/bootstrap.min.css" rel="stylesheet"/>
+    <script src="./static/node_modules/@popperjs/core/dist/umd/popper.js" rel="stylesheet"></script>
+    <script src="./static/node_modules/bootstrap/dist/js/bootstrap.bundle.js"></script>
+    
+    
     <!-- Paho JavaScript MQTT Library -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/paho-mqtt/1.0.1/mqttws31.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.7.2/socket.io.js"></script>
@@ -61,7 +21,7 @@
 <body class="container mt-6">
     <h1 class="mb-4">FanWall</h1>
     <div class="row">
-        <div class="col-md-4">
+        <div class="col-md-2">
             <p>Status: <span id="status">-</span></p>
         </div>
         <div class="col-md-6">
@@ -73,112 +33,55 @@
                 <button class="btn btn-secondary dropdown-toggle" type="button" id="dropdownMenuButton" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
                     Select Configuration
                 </button>
-                <div class="dropdown-menu" id="configDropdown" aria-labelledby="dropdownMenuButton">
-            </div>
-
+                <div class="dropdown-menu" id="configDropdown" aria-labelledby="dropdownMenuButton"></div>
             </div >
+            
+        </div>
+        <div class="col-md-2">
+            <div class="d-flex justify-content-end">
+                <button class="btn btn-primary  ml-auto"  onclick="exportGridAsMatrix()">Save</button>
+                <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#exampleModal">
+                    Create New
+                </button>
+            </div>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-md-3">
         </div>
     </div>
     
     <div class="grid-stack" gs-w="3" gs-min-row="12"></div>
-    <div class="row">
-        <div class="col-md-6">
-            <button class="btn btn-primary  ml-auto"  onclick="exportGridAsMatrix()">Export Grid IDs</button>
+    <!-- Button trigger modal -->
+    
+    
+    <!-- Modal -->
+    <div class="modal fade" id="exampleModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+            <h5 class="modal-title" id="exampleModalLabel">New config</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <label for="newConfigurationNameInputBox">Configuration name</label>
+                <input type="text" class="form-control" id="newConfigurationNameInputBox" placeholder="Grid 1">
+            </div>
+            <div class="modal-footer">
+            <button class="btn btn-primary  ml-auto"  onclick="exportGridAsMatrix()">Create</button>
+            </div>
+        </div>
         </div>
     </div>
 
+    <script src="./static/js/mqtt.js"></script>
+    <script src="./static/js/configurations.js"></script>
+    <script src="./static/js/mqttMessageManager.js"></script>
+    <script src="./static/js/socketio.js"></script>
+    <script src="./static/js/socketMessageManager.js"></script>
+    <script src="./static/js/ui.js"></script>
     <script>
-        var options = {
-            cellHeight: 80,
-            verticalMargin: 10,
-            width: 12,
-            minHeight: 4,
-            float: true,
-        };
-
-        const MessageType = {
-            STATUS_UPDATE: 'status_update',
-            COMMAND: 'command',
-            CONFIG_UPDATE: 'config_update',
-            CONTROLLER_INFORMATION: 'controller_information',
-            // Add more message types as needed
-        };
-
-        function createMessage(type, data) {
-            return {
-                type: type,
-                data: data
-            };
-        }
         
-        
-        var grid = GridStack.init(options);
-        var controllerIds = ["id1","id2","id3"];
-        getConfigurations();
-
-        socket = io.connect('http://' + document.domain + ':' + location.port);
-        socket.on('connect', function() {
-            console.log('Connected to server');
-            socket.emit('my event', {data: 'I\'m connected!'});
-        });
-        socket.on('message', function(message) {
-            // Handle incoming messages
-            console.log('Received message:', message);
-        });
-
-        socket.on('fanId', function(data) {
-            var id = data.id;
-            console.log('Received ID:', id);
-
-            // Handle ID received, similar to MQTT logic
-            if (!controllerIds.includes(id)) {
-                controllerIds.push(id);
-                console.log(controllerIds);
-                updateSliders();
-            }
-        });
-
-        var mqttClient = new Paho.MQTT.Client('broker.hivemq.com', 8000, '5a0d6a66b35b476a8653e7edb84528df');
-
-        mqttClient.onConnectionLost = function (responseObject) {
-            if (responseObject.errorCode !== 0) {
-                console.log('Connection lost: ' + responseObject.errorMessage);
-            }
-        };
-
-        mqttClient.onMessageArrived = function (message) {
-            // Update status on message arrival
-            document.getElementById('status').innerText = message.payloadString;
-        };
-
-        mqttClient.connect({
-            onSuccess: function () {
-                console.log('Connected to HiveMQ broker');
-                mqttClient.subscribe('fanWall/wall/control');
-                mqttClient.subscribe('fanWall/wall/status');
-                mqttClient.subscribe('fanWall/wall/id');
-            },
-            onFailure: function (message) {
-                console.log('Connection failed: ' + message.errorMessage);
-            },
-        });
-
-
-        mqttClient.onMessageArrived = function (message) {
-            // Update status on message arrival
-            document.getElementById('status').innerText = message.payloadString;
-            console.log(message.payloadString);
-            if (message.destinationName === 'fanWall/wall/id' && message.payloadString !=='get') {
-                console.log('Received ID: ' + message.payloadString);
-                if (!controllerIds.includes(message.payloadString)){
-                    controllerIds.push(message.payloadString);
-                    console.log(controllerIds);
-                    addSlider(message.payloadString);
-                }
-
-            }
-        };
-
         function addController(id, controllerName) {
             const postData = {
                 name: controllerName
@@ -204,130 +107,8 @@
                 console.error('There was a problem with the fetch operation:', error);
             });
         }
-        updateSliders();
-        function getValue(id) {
-            console.log(id);
-            var slider = document.getElementById(id);
-            var value = slider.value;
-            console.log('Slider value: ' + value);
-            //setSpeed(value,id);
-            setSpeedSocket(value,id);
-        }
+        //updateSliders();
 
-        function setSpeedSocket(speed,id) {
-            const message = createMessage(MessageType.COMMAND, {
-                id: id,
-                speed: speed
-            });
-            socket.emit('fanControl', message);
-            console.log('Sending message:', message);
-            
-        }
-
-        function addControllerSocket(id, controllerName) {
-            const message = createMessage(MessageType.CONTROLLER_INFORMATION, {
-                id: id,
-                name: controllerName
-            });
-            socket.emit('fanControl', message);
-            console.log('Sending message:', message);
-        }
-
-        function setSpeed(speed,id) {
-            var destinationTopic = 'fanWall/wall/'+id;
-            console.log(destinationTopic)
-            mqttClient.subscribe(destinationTopic);
-            console.log('Setting speed to ' + speed);
-            var message = new Paho.MQTT.Message(speed);
-            message.destinationName = destinationTopic;
-            mqttClient.send(message);
-        }	
-
-        function startProcedure() {
-            var command = 'start';
-            var message = new Paho.MQTT.Message(command);
-            message.destinationName = 'fanWall/wall/control';
-            mqttClient.send(message);
-            //const startProcedure = createMessage(MessageType.COMMAND, command);
-            //socket.emit('fanControl', startProcedure);
-        }
-
-
-        function getAllControllers() {
-            var message = new Paho.MQTT.Message('get');
-            controllerIds = [];
-            message.destinationName = 'fanWall/wall/id';
-            //mqttClient.send(message);
-            const getControllers = createMessage(MessageType.CONTROLLER_INFORMATION,'get');
-            socket.emit('fanControl', getControllers);
-        }
-
-        function updateSliders(){
-            controllerIds.forEach(function(id){
-                addSlider(id);
-            });
-        }
-
-        function addSlider(id){
-            var slider = document.createElement("input");
-            slider.type = "range";
-            slider.min = "0";
-            slider.max = "100";
-            slider.value = "50";
-            slider.id = "slider";
-            slider.onmouseup = function() {
-                getValue();
-            };
-            var itemHtml = '<div class="square-wrapper"><br><br><label class="slider-label" for="' + id + '">' + id + '</label><input type="range" min="0" max="100" value="50" class="slider" id="' + id + '"></div>';
-            grid.addWidget(itemHtml, {w: 2, h: 2, id:id ,noResize: true});
-        }
-
-        $(document).on('mouseup', '.slider', function() {
-            var id = $(this).attr('id');
-            getValue(id);
-
-        });
-
-        window.exportGridAsMatrix = function() {
-            var gridMatrix = [];
-            var items = grid.engine.nodes;
-
-            items.forEach(function(item) {
-                var x = item.x;
-                var y = item.y;
-                var id = item.id;
-                var cell = { id: id, x: x, y: y};
-                gridMatrix.push(cell);
-            });
-
-            console.log('Grid Matrix:', gridMatrix);
-
-        };
-
-        function getConfigurations() {
-            fetch('/api/v1/fanWall/configurations')
-                .then(response => {
-                if (!response.ok) {
-                    throw new Error('Network response was not ok');
-                }
-                return response.json();
-                })
-                .then(data => {
-                    const dropdown = document.getElementById('configDropdown');
-                    dropdown.innerHTML = ''; // Clear existing options
-
-                    data.configurations.forEach(configId => {
-                    const option = document.createElement('a');
-                    option.classList.add('dropdown-item');
-                    option.href = '#'; // Add link behavior if needed
-                    option.textContent = `Configuration ${configId}`;
-                    dropdown.appendChild(option);
-                    });
-                })
-                .catch(error => {
-                    console.error('There was a problem with the fetch operation:', error);
-                });
-        }
         
 
     </script>
