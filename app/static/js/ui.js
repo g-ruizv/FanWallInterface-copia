@@ -9,6 +9,7 @@ var options = {
 const MessageType = {
     STATUS_UPDATE: 'status_update',
     COMMAND: 'command',
+    ACTIVATE: 'activate',
     CONFIG_UPDATE: 'config_update',
     CONTROLLER_INFORMATION: 'controller_information',
     // Add more message types as needed
@@ -55,7 +56,7 @@ function getConfigurations() {
         .then(data => {
             const dropdown = document.getElementById('configDropdown');
             dropdown.innerHTML = ''; // Clear existing options
-
+            console.log(data);
             data.configurations.forEach(configId => {
             const option = document.createElement('a');
             option.classList.add('dropdown-item');
