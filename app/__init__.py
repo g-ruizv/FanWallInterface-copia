@@ -19,5 +19,5 @@ def create_app():
     with app.app_context():
         models.db.create_all()
 
-    mqtt.start_mqtt()
+    mqtt.mqtt_start()
     return app

@@ -1,6 +1,6 @@
 import threading
 from flask_socketio import emit
-from . import mqtt_client, app
+from . import mqtt_client, app, socketio
 
 def on_connect(client, userdata, flags, reason_code, properties=None):
     print(f"Connected with result code {reason_code}")
@@ -9,8 +9,10 @@ def on_connect(client, userdata, flags, reason_code, properties=None):
     client.subscribe('fanWall/wall/id')
 
 def on_message(client, userdata, msg):
-    if msg.topic == 'fanWall/wall/id' and msg.payload != 'get':
-        emit('fanId', {'id': msg.payload.decode('utf-8')})
+    if msg.topic == 'fanWall/wall/id' and msg.payload.decode('utf-8') != 'get':
+        print(f"Received message from {msg.topic}: {msg.payload}")
+        with app.app_context():
+            socketio.emit('fanId', {'id': msg.payload.decode('utf-8')})
 
 def mqtt_thread():
     mqtt_client.on_connect = on_connect
@@ -25,11 +27,12 @@ def start_mqtt():
     mqtt_thread_instance.start()
 
 def mqtt_start():
-    mqtt_client.on_connect = on_connect
-    mqtt_client.on_message = on_message
-    mqtt_client.connect('broker.hivemq.com', 1883)
-    print("Connected to MQTT broker")
-    mqtt_client.loop_start()
+    with app.app_context():
+        mqtt_client.on_connect = on_connect
+        mqtt_client.on_message = on_message
+        mqtt_client.connect('broker.hivemq.com', 1883)
+        print("Connected to MQTT broker")
+        mqtt_client.loop_start()
 
 def send_mqtt_message(topic, message, client):
     with app.app_context():
