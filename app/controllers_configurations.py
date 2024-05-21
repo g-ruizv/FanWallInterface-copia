@@ -33,6 +33,57 @@ def add_controller_to_configuration(config_id, controller_id):
         'y_coordinate': y_coordinate
     }
 
+@app.route('/api/v1/fanWall/configurations/create_with_controllers', methods=['POST'])
+@cross_origin()
+def create_configuration_with_controllers():
+    configuration = Configuration()
+    configuration.name = request.json['name']
+    db.session.add(configuration)
+    
+    for controller_id in request.json['controllers']:
+        controller = Controller.query.get(controller_id)
+        if controller is None:
+            return {'error': 'Controller not found'}
+        
+        x_coordinate = request.json['controllers'][controller_id].get('x')
+        y_coordinate = request.json['controllers'][controller_id].get('y')
+        
+        controller_coord = controllers_configurations.insert().values(controller_id=controller_id, configuration_id=configuration.id, x_coordinate=x_coordinate, y_coordinate=y_coordinate)
+        db.session.execute(controller_coord)
+    
+    db.session.commit()
+    
+    return {
+        'configuration_id': configuration.id,
+        'name': configuration.name,
+        'controllers': request.json['controllers']
+    }
+
+@app.route('/api/v1/fanWall/configurations/<config_id>/controllers', methods=['PATCH'])
+@cross_origin()
+def update_configuration(config_id):
+    configuration = Configuration.query.get(config_id)
+    for controller_id in request.json['controllers']:
+        controller = Controller.query.get(controller_id)
+        if controller is None:
+            return {'error': 'Controller not found'}
+        if controller in configuration.controllers:
+            x_coordinate = request.json['controllers'][controller_id].get('x')
+            y_coordinate = request.json['controllers'][controller_id].get('y')
+            controller_coord = db.session.query(controllers_configurations).filter_by(controller_id=controller_id, configuration_id=config_id).first()
+            controller_coord.x_coordinate = x_coordinate
+            controller_coord.y_coordinate = y_coordinate
+        else:
+            x_coordinate = request.json['controllers'][controller_id].get('x')
+            y_coordinate = request.json['controllers'][controller_id].get('y')
+            controller_coord = controllers_configurations.insert().values(controller_id=controller_id, configuration_id=config_id, x_coordinate=x_coordinate, y_coordinate=y_coordinate)
+            db.session.execute(controller_coord)
+    db.session.commit()
+    return {
+        'configuration_id': config_id,
+        'controllers': request.json['controllers']
+    }
+
 @app.route('/api/v1/fanWall/configurations/<config_id>/remove_controller/<controller_id>', methods=['DELETE'])
 @cross_origin()
 def remove_controller_from_configuration(config_id, controller_id):
@@ -66,9 +117,13 @@ def get_controllers_from_configuration(config_id):
         return {'error': 'Configuration not found'}
     
     controllers = configuration.controllers
+    coordinateJson = {}
+    for controller in controllers:
+        controller_coord = db.session.query(controllers_configurations).filter_by(controller_id=controller.id, configuration_id=config_id).first()
+        coordinateJson[controller.id] = {'x': controller_coord.x_coordinate, 'y': controller_coord.y_coordinate}
     return {
         'configuration_id': config_id,
-        'controllers': [controller.id for controller in controllers]
+        'controllers': coordinateJson
     }
 
 @app.route('/api/v1/fanWall/configurations/<config_id>/controllers/<controller_id>', methods=['GET'])
