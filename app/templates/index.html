@@ -25,23 +25,25 @@
         <div class="col-md-2">
             <p>Status: <span id="status">-</span></p>
         </div>
-        <div class="col-md-6">
+        <div class="col-md-4">
             <button class="btn btn-primary mr-2" onclick="startProcedure()">Start Procedure</button>
             <button class="btn btn-primary" onclick="getAllControllers()">Get controllers</button>
             <button class="btn btn-primary" onclick="addMultipleControllers()">Get controllers</button>
         </div>
         <div class="col-md-2">
             <div class="dropdown">
-                <button class="btn btn-secondary dropdown-toggle" type="button" id="dropdownMenuButton" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                <button class="btn btn-secondary dropdown-toggle" type="button" id="dropdownMenuButton" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
                     Select Configuration
                 </button>
                 <div class="dropdown-menu" id="configDropdown" aria-labelledby="dropdownMenuButton"></div>
             </div >
-            
+        </div>
+        <div class="col-md-2">
+            <h5>Configuration: <span id="currentConfiguration">None</span></h5>
         </div>
         <div class="col-md-2">
             <div class="d-flex justify-content-end">
-                <button class="btn btn-primary  ml-auto"  onclick="saveConfiguration(2)">Save</button>
+                <button class="btn btn-primary  ml-auto"  onclick="updateConfiguration(currentConfiguration.id)">Save</button>
                 <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#exampleModal">
                     Create New
                 </button>
