@@ -47,6 +47,33 @@ function addMultipleControllers() {
     })
 }
 
+function getConfigurations() {
+    fetch('/api/v1/fanWall/configurations')
+        .then(response => {
+        if (!response.ok) {
+            throw new Error('Network response was not ok');
+        }
+        return response.json();
+        })
+        .then(data => {
+            const dropdown = document.getElementById('configDropdown');
+            dropdown.innerHTML = ''; // Clear existing options
+            console.log(data);
+            data.configurations.forEach(configuration => {
+                const option = document.createElement('a');
+                option.classList.add('dropdown-item');
+                option.href = '#'; // Add link behavior if needed
+                console.log(configuration);
+                option.id = `${configuration.id}`;
+                option.textContent = `Configuration ${configuration.name}`;
+                dropdown.appendChild(option);
+            });
+        })
+        .catch(error => {
+            console.error('There was a problem with the fetch operation:', error);
+        });
+}
+
 function createConfiguration(id, configurationName){
     const postData = {
         name: configurationName
@@ -97,6 +124,10 @@ function saveConfiguration(){
     })
     .then(data => {
         console.log('Response from server:', data);
+        currentConfiguration.id = data.id;
+        currentConfiguration.name = configurationName;
+        document.getElementById('currentConfiguration').textContent = data.name;
+        getConfigurations();
     })
     .catch(error => {
         console.error('There was a problem with the fetch operation:', error);
@@ -109,6 +140,7 @@ function updateConfiguration(configurationId){
     const postData = {
         controllers: configurationMatrix
     };
+    console.log(postData);
 
     fetch(`/api/v1/fanWall/configurations/${configurationId}/controllers`, {
         method: 'PATCH',
@@ -125,6 +157,27 @@ function updateConfiguration(configurationId){
     })
     .then(data => {
         console.log('Response from server:', data);
+    })
+    .catch(error => {
+        console.error('There was a problem with the fetch operation:', error);
+    });
+}
+
+function importConfiguration(configurationId){
+    console.log('Importing configuration...');
+    fetch(`/api/v1/fanWall/configurations/${configurationId}/controllers`)
+    .then(response => {
+        if (!response.ok) {
+        throw new Error('Network response was not ok');
+        }
+        return response.json();
+    })
+    .then(data => {
+        console.log('Response from server:', data);
+        importGridFromJSON(data.controllers);
+        currentConfiguration.id = configurationId;
+        currentConfiguration.name = data.name;
+        document.getElementById('currentConfiguration').textContent = data.name;
     })
     .catch(error => {
         console.error('There was a problem with the fetch operation:', error);
