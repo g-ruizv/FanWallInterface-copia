@@ -1,5 +1,6 @@
 from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
+from sqlalchemy.orm import joinedload
 from flask_socketio import SocketIO
 from flask_cors import CORS
 import paho.mqtt.client as mqttPaho
@@ -13,11 +14,16 @@ socketio = SocketIO(app)
 cors = CORS(app)
 mqtt_client = mqttPaho.Client()
 
-from app import models, controllers, configurations, mqtt, routes, socket, controllers_configurations
+from app import models, controllers, configurations, mqtt, routes, socket, controllers_configurations, queries, presets, functions
 
 def create_app():
     with app.app_context():
         models.db.create_all()
 
     mqtt.mqtt_start()
+    print(queries.get_matrix_from_config(10))
+    print(queries.get_size_of_config(10))
+    print(queries.get_controller_count(10))
+    print(queries.is_config_square(10))
+    print(functions.generate_config_matrix(10))
     return app
