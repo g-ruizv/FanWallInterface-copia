@@ -1,4 +1,5 @@
 from . import db
+from sqlalchemy.dialects.sqlite import JSON
 
 controllers_configurations = db.Table(
     'controllers_configurations',
@@ -22,3 +23,11 @@ class Configuration(db.Model):
 
     def __repr__(self):
         return '<Configuration %r>' % self.name
+    
+class Preset(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(80), unique=True, nullable=False)
+    data = db.Column(JSON, nullable=False)  # Using JSONB for JSON support in PostgreSQL
+
+    def __repr__(self):
+        return '<Preset %r>' % self.name
