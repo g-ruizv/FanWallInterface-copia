@@ -1,5 +1,6 @@
 var options = {
-    cellHeight: 80,
+    cellHeight: 70,
+    cellWidth: 60,
     verticalMargin: 10,
     width: 12,
     minHeight: 4,
