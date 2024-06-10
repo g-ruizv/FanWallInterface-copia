@@ -3,6 +3,8 @@
     border: 3px solid #000;
     padding: 3px;
     border-radius: 5px; /* Rounded edges */
+    width: 100%;
+    height: 750%;
 }
 
 .grid-stack-item-content {
@@ -39,4 +41,16 @@
 .slider {
     width: 75%;
     margin: 0 auto;
+}
+
+.sidebar {
+    background-color: #f8f9fa; /* Light gray background */
+    padding: 15px;
+    border-right: 0px solid #ddd; /* Optional border to separate the sidebar */
+}
+.top-bar {
+    background-color: #007bff; /* Bootstrap primary color */
+    color: white;
+    padding: 10px;
+    margin-bottom: 5px;
 }
