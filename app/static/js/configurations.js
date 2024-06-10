@@ -39,3 +39,8 @@ let currentConfiguration = {
     id: null,
     name: null
 };
+
+let currentPreset = {
+    id: null,
+    name: null
+};
