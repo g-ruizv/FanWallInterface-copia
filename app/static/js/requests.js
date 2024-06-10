@@ -74,6 +74,33 @@ function getConfigurations() {
         });
 }
 
+function getPresets() {
+    fetch('/api/v1/fanWall/presets')
+        .then(response => {
+        if (!response.ok) {
+            throw new Error('Network response was not ok');
+        }
+        return response.json();
+        })
+        .then(data => {
+            const dropdown = document.getElementById('presetDropdown');
+            dropdown.innerHTML = ''; // Clear existing options
+            console.log(data);
+            data.presets.forEach(preset => {
+                const option = document.createElement('a');
+                option.classList.add('dropdown-item');
+                option.href = '#'; // Add link behavior if needed
+                console.log(preset);
+                option.id = `${preset.id}`;
+                option.textContent = `Preset ${preset.name}`;
+                dropdown.appendChild(option);
+            });
+        })
+        .catch(error => {
+            console.error('There was a problem with the fetch operation:', error);
+        });
+}
+
 function createConfiguration(id, configurationName){
     const postData = {
         name: configurationName
@@ -127,6 +154,37 @@ function saveConfiguration(){
         currentConfiguration.id = data.id;
         currentConfiguration.name = configurationName;
         document.getElementById('currentConfiguration').textContent = data.name;
+        getConfigurations();
+    })
+    .catch(error => {
+        console.error('There was a problem with the fetch operation:', error);
+    });
+}
+
+function savePreset(){
+    console.log('Saving preset...');
+    const presetName = document.getElementById('newPresetNameInputBox').value;
+    const presetJSON = JSON.parse(document.getElementById('newPresetJsonInputBox').value);
+    const postData = {
+        name: presetName,
+        data: presetJSON
+    };
+
+    fetch(`/api/v1/fanWall/presets`, {
+        method: 'POST',
+        headers: {
+        'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(postData)
+    })
+    .then(response => {
+        if (!response.ok) {
+        throw new Error('Network response was not ok');
+        }
+        return response.json();
+    })
+    .then(data => {
+        console.log('Response from server:', data);
         getConfigurations();
     })
     .catch(error => {
