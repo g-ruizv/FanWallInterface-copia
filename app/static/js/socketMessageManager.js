@@ -19,6 +19,12 @@ function startProcedure() {
     socket.emit('fanControl', startProcedure);
 }
 
+function stopProcedure() {
+    var command = 'stop';
+    const stopProcedure = createMessage(MessageType.ACTIVATE, command);
+    socket.emit('fanControl', stopProcedure);
+}
+
 function setControllerSpeed(speed,id) {
     const message = createMessage(MessageType.COMMAND, {
         id: id,
