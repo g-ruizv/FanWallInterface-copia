@@ -20,8 +20,16 @@ def get_size_of_config(config_id):
         ).filter(
             controllers_configurations.c.configuration_id == config_id
         ).one()
+
+        print('resultSize')
         print(result)
-        return result[0], result[1]
+        xSize = int(result[0]/2+1)
+        ySize = int(result[1]/2+1)
+        if xSize==0:
+            xSize = 1
+        if ySize==0:
+            ySize = 1
+        return xSize, ySize
     
 def get_config_corners(config_id):
     with app.app_context():
@@ -49,3 +57,13 @@ def is_config_square(config_id):
     if controllerCount == 1:
         return True
     return xSize == ySize and controllerCount == xSize**2
+
+def is_config_rectangle(config_id):
+    xSize, ySize = get_size_of_config(config_id)
+    print('xSize, ySize')
+    print(xSize, ySize)
+    controllerCount = get_controller_count(config_id)
+    if controllerCount == 1:
+        return True
+    
+    return controllerCount == xSize*ySize
