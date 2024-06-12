@@ -28,3 +28,6 @@ def handle_message(message):
             send_mqtt_message('fanWall/wall/control', 'start', mqtt_client)
     else:
         print('Unknown message type')
+
+def send_fan_speed(fanId, fanSpeed):
+    socketio.emit('fanSpeed', {'id': fanId, 'speed': fanSpeed})
