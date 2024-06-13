@@ -43,3 +43,4 @@ socket.on('fanSpeed', function(data) {
     });
 });
 
+socket.emit('controllerReset', "reset");
