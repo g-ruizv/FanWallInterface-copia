@@ -24,6 +24,57 @@ function addController(id, controllerName) {
     });
 }
 
+function updateController() {
+    const controllerSelect = document.getElementById('controllerSelect');
+    const controllerValue = document.getElementById('controllerValue').value;
+    const selectedControllerId = controllerSelect.value;
+
+    fetch(`/api/v1/fanWall/controllers/${selectedControllerId}`, {
+        method: 'PUT',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ name: controllerValue }),
+    })
+    .then(response => {
+        if (!response.ok) {
+            throw new Error('Network response was not ok');
+        }
+        return response.json();
+    })
+    .then(data => {
+        console.log('Success:', data);
+        // Optionally, close the modal and reset the form
+        $('#controllerModal').modal('hide');
+        document.getElementById('updateForm').reset();
+    })
+    .catch(error => {
+        console.error('There was a problem with the PUT operation:', error);
+    });
+}
+function getControllers() {
+    fetch('/api/v1/fanWall/controllers')
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('Network response was not ok');
+            }
+            return response.json();
+        })
+        .then(data => {
+            const controllerSelect = document.getElementById('controllerSelect');
+            controllerSelect.innerHTML = ''; // Clear previous options
+            data.controllers.forEach(controller => {
+                const option = document.createElement('option');
+                option.value = controller.id;
+                option.textContent = controller.name;
+                controllerSelect.appendChild(option);
+            });
+        })
+        .catch(error => {
+            console.error('There was a problem with the fetch operation:', error);
+        });
+}
+
 function addMultipleControllers() {
     controllerList = getControllerNamesAndIds();
     console.log(controllerList);
