@@ -5,7 +5,7 @@ from flask_cors import cross_origin
 from flask_sqlalchemy import SQLAlchemy
 from . import app, db, mqtt_client
 from .models import Preset
-from .functions import generate_config_matrix, get_dimensions_from_preset
+from .functions import generate_config_matrix, get_dimensions_from_preset, validate_json
 from .mqtt import mqtt_client, send_mqtt_message
 from .socket import send_fan_speed
 
@@ -26,6 +26,9 @@ def get_presets():
 @cross_origin()
 def add_preset(id):
     preset = Preset.query.get(id)
+    is_valid, error = validate_json(request.json['data'])
+    if not is_valid:
+        return {'error': error}
     if preset is None:
         preset = Preset(id=id)
         preset.name = request.json['name']
@@ -39,6 +42,9 @@ def add_preset(id):
 @app.route('/api/v1/fanWall/presets', methods=['POST'])
 @cross_origin()
 def add_new_preset():
+    is_valid, error = validate_json(request.json['data'])
+    if not is_valid:
+        return {'error': error}
     preset = Preset()
     preset.name = request.json['name']
     preset.data = request.json['data']
