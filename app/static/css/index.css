@@ -16,7 +16,9 @@
     height: 750%;
 }
 
-
+.warning-custom-alert{
+    z-index: 1100; /* Higher than the modal z-index */
+}
 
 .grid-stack-item {
     width: calc(100% / 12); /* Set the width for each grid item */
