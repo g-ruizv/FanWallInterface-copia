@@ -44,7 +44,7 @@ def try_reconnect(client):
 def mqtt_thread():
     mqtt_client.on_connect = on_connect
     mqtt_client.on_message = on_message
-    mqtt_client.connect('broker.hivemq.com', 8883)
+    mqtt_client.connect('broker.hivemq.com', 1883)
     print("Connected to MQTT broker")
     mqtt_client.loop_forever()
 
@@ -58,7 +58,7 @@ def mqtt_start():
         mqtt_client.on_connect = on_connect
         mqtt_client.on_message = on_message
         mqtt_client.on_disconnect = on_disconnect
-        mqtt_client.connect('broker.hivemq.com', 8883)
+        mqtt_client.connect('broker.hivemq.com', 1883)
         print("Connected to MQTT broker")
         mqtt_client.loop_start()
 
