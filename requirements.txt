@@ -7,3 +7,4 @@ Flask-Bcrypt==1.0.1
 paho-mqtt==2.1.0
 SQLAlchemy==2.0.28
 gunicorn
+eventlet
