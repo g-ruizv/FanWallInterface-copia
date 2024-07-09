@@ -1,4 +1,4 @@
-var mqttClient = new Paho.MQTT.Client('wss//broker.hivemq.com', 8884, '5a0d6a66b35b476a8653e7edb84528df');
+var mqttClient = new Paho.MQTT.Client('broker.hivemq.com', 8884, '5a0d6a66b35b476a8653e7edb84528df');
 
 mqttClient.onConnectionLost = function (responseObject) {
     if (responseObject.errorCode !== 0) {
@@ -11,15 +11,26 @@ mqttClient.onMessageArrived = function (message) {
     document.getElementById('status').innerText = message.payloadString;
 };
 
-mqttClient.connect({
-    onSuccess: function () {
-        console.log('Connected to HiveMQ broker');
-        mqttClient.subscribe('fanWall/wall/control');
-        mqttClient.subscribe('fanWall/wall/status');
-        mqttClient.subscribe('fanWall/wall/id');
-    },
-    onFailure: function (message) {
-        console.log('Connection failed: ' + message.errorMessage);
-    },
-});
+var options = {
+    useSSL: true,
+    userName: 'fanWallInterface',
+    timeout: 3,
+    onSuccess: onConnect,
+    onFailure: onConnectionLost,
+}
+
+mqttClient.connect(options);
+
+function onConnect() {
+    console.log('Connected to HiveMQ broker');
+    mqttClient.subscribe('fanWall/wall/control');
+    mqttClient.subscribe('fanWall/wall/status');
+    mqttClient.subscribe('fanWall/wall/id');
+}
+
+function onConnectionLost(responseObject) {
+    if (responseObject.errorCode !== 0) {
+        console.log('Connection lost: ' + responseObject.errorMessage);
+    }
+}
 
