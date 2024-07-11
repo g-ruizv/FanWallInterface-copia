@@ -38,7 +38,7 @@ def load_user(user_id):
 def create_app():
     app = Flask(__name__)
     app.config['SECRET_KEY'] = os.getenv('SECRET_KEY')
-    app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv('DATABASE_URL')
+    app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv('DATABASE_POSTGRES_URL')
     app.config['CORS_HEADERS'] = 'Content-Type'
     
     db.init_app(app)
@@ -53,9 +53,19 @@ def create_app():
 
     from app.users import user as user_blueprint
     from app.routes import main as main_blueprint
+    from app.controllers import controllerBP as controller_blueprint
+    from app.controllers_configurations import controllers_configurationsBP as controllers_configurations_blueprint
+    from app.configurations import configurationsBP as configurations_blueprint
+    from app.presets import presetsBP as presets_blueprint
     app.register_blueprint(user_blueprint)
     app.register_blueprint(main_blueprint)
+    app.register_blueprint(controller_blueprint)
+    app.register_blueprint(controllers_configurations_blueprint)
+    app.register_blueprint(configurations_blueprint)
+    app.register_blueprint(presets_blueprint)
+
 
     mqtt.mqtt_start()
-
+    print('MQTT Started')
     return app
+
