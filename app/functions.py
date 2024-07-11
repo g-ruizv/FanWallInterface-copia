@@ -48,7 +48,7 @@ def validate_json(json):
 
     for frame in json['frames']:
         print(frame)
-        if is_preset_frame_rectangle(frame['matrix']):
+        if not is_preset_frame_rectangle(frame['matrix']):
             return False, 'all frames must be rectangles'
 
         if 'matrix' not in frame:
