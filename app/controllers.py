@@ -1,23 +1,25 @@
-from flask import request
+from flask import request, Blueprint
 from flask_cors import cross_origin
 from flask_sqlalchemy import SQLAlchemy
 from . import app, db
 from .models import Controller
 
-@app.route('/api/v1/fanWall/controllers', methods=['GET'])
+controllerBP = Blueprint('controllers', __name__)
+
+@controllerBP.route('/api/v1/fanWall/controllers', methods=['GET'])
 @cross_origin()
 def get_controllers():
     controllers = Controller.query.all()
     return {'controllers': [{'id':controller.id,'name':controller.name}  
                             for controller in controllers]}
 
-@app.route('/api/v1/fanWall/controllers/<id>', methods=['GET'])
+@controllerBP.route('/api/v1/fanWall/controllers/<id>', methods=['GET'])
 @cross_origin()
 def get_controller(id):
     controller = Controller.query.get(id)
     return {'id': controller.id, 'name': controller.name}
 
-@app.route('/api/v1/fanWall/controllers/<id>', methods=['POST'])
+@controllerBP.route('/api/v1/fanWall/controllers/<id>', methods=['POST'])
 @cross_origin()
 def add_controller(id):
     controller = Controller.query.get(id)
@@ -30,7 +32,7 @@ def add_controller(id):
     else:
         return {'error': 'Controller already exists'}
 
-@app.route('/api/v1/fanWall/addMultipleControllers/', methods=['POST'])
+@controllerBP.route('/api/v1/fanWall/addMultipleControllers/', methods=['POST'])
 @cross_origin()
 def add_multiple_controllers():
     for controller in request.json['controllers']:
@@ -44,7 +46,7 @@ def add_multiple_controllers():
     db.session.commit()
     return {'success': 'Controllers added'}
 
-@app.route('/api/v1/fanWall/controllers/<id>', methods=['DELETE'])
+@controllerBP.route('/api/v1/fanWall/controllers/<id>', methods=['DELETE'])
 @cross_origin()
 def delete_controller(id):
     controller = Controller.query.get(id)
@@ -52,7 +54,7 @@ def delete_controller(id):
     db.session.commit()
     return {'id': controller.id, 'name': controller.name, 'x_coordinate': controller.x_coordinate, 'y_coordinate': controller.y_coordinate}
 
-@app.route('/api/v1/fanWall/controllers/<id>', methods=['PUT'])
+@controllerBP.route('/api/v1/fanWall/controllers/<id>', methods=['PUT'])
 @cross_origin()
 def update_controller(id):
     controller = Controller.query.get(id)
