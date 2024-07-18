@@ -86,6 +86,29 @@ function getControllers() {
         });
 }
 
+async function getController(id) {
+    let controllerData;
+    try {
+        const response = await fetch(`/api/v1/fanWall/controllers/${id}`);
+        if (!response.ok) {
+            throw new Error('Network response was not ok');
+        }
+        const data = await response.json();
+        if (data.error) {
+            showAlert(data.error, "warning");
+            return;
+        }
+        console.log('Controller:', data);
+        controllerData = data;
+        console.log(controllerData);
+    } catch (error) {
+        console.error('There was a problem with the fetch operation:', error);
+    }
+    console.log(controllerData);
+    return controllerData;
+}
+
+
 function addMultipleControllers() {
     controllerList = getControllerNamesAndIds();
     console.log(controllerList);
