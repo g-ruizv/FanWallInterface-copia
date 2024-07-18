@@ -88,14 +88,17 @@ function addSlider(id){
     slider.onmouseup = function() {
         getValue();
     };
-    var itemHtml = `
-        <div class="unavailable grid-stack-item-content">
-            <button class="delete-button" onclick="deleteWidget('${id}')">&times;</button>
-            <br><br>
-            <label class="slider-label" for="${id}">${id}</label>
-            <input type="range" min="0" max="100" value="50" class="slider" id="${id}">
-        </div>`;
-    grid.addWidget(itemHtml, {w: 2, h: 2, id:id ,noResize: true});
+    getController(id).then(function(controller){
+        var controllerName = controller.name;
+        var itemHtml = `
+            <div class="unavailable grid-stack-item-content">
+                <button class="delete-button" onclick="deleteWidget('${id}')">&times;</button>
+                <br><br>
+                <label class="slider-label" for="${id}">${controllerName}</label>
+                <input type="range" min="0" max="100" value="50" class="slider" id="${id}">
+            </div>`;
+        grid.addWidget(itemHtml, {w: 2, h: 2, id:id ,noResize: true});
+    });
 }
 
 function deleteWidget(id) {
