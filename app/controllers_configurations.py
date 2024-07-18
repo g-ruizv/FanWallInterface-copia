@@ -148,7 +148,7 @@ def get_controllers_from_configuration(config_id):
     coordinateJson = {}
     for controller in controllers:
         controller_coord = db.session.query(controllers_configurations).filter_by(controller_id=controller.id, configuration_id=config_id).first()
-        coordinateJson[controller.id] = {'x': controller_coord.x_coordinate, 'y': controller_coord.y_coordinate}
+        coordinateJson[controller.id] = {'x': controller_coord.x_coordinate, 'y': controller_coord.y_coordinate, 'name': controller.name}
     return {
         'name': configuration.name,
         'configuration_id': config_id,
