@@ -28,7 +28,7 @@ class Configuration(db.Model):
 class Preset(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(80), unique=True, nullable=False)
-    data = db.Column(JSONB, nullable=False)  # Using JSONB for JSON support in PostgreSQL
+    data = db.Column(db.JSON, nullable=False)  # Using JSONB for JSON support in PostgreSQL
 
     def __repr__(self):
         return '<Preset %r>' % self.name

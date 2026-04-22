@@ -8,7 +8,7 @@ user = Blueprint('user', __name__)
 @user.route('/register', methods=['GET', 'POST'])
 def register():
     if current_user.is_authenticated:
-        return redirect(url_for('index'))
+        return redirect(url_for('main.index'))
     if request.method == 'POST':
         username = request.form['username']
         email = request.form['email']
@@ -24,7 +24,7 @@ def register():
 @user.route('/login', methods=['GET', 'POST'])
 def login():
     if current_user.is_authenticated:
-        return redirect(url_for('index'))
+        return redirect(url_for('main.index'))
     if request.method == 'POST':
         email = request.form['email']
         password = request.form['password']
@@ -32,7 +32,7 @@ def login():
         if user and bcrypt.check_password_hash(user.password, password):
             login_user(user, remember=request.form.get('remember'))
             next_page = request.args.get('next')
-            return redirect(next_page) if next_page else redirect(url_for('index'))
+            return redirect(next_page) if next_page else redirect(url_for('main.index'))
         else:
             flash('Login Unsuccessful. Please check email and password', 'danger')
     return render_template('login.html')
