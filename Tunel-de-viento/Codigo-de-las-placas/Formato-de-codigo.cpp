@@ -27,9 +27,9 @@ const char* mqtt_server = "192.168.1.100";
 const int mqtt_port = 1883;
 
 // Tópicos MQTT (se construyen automáticamente a partir del MODULE_ID)
-String topic_sensores = "fanwall/" + String(MODULE_ID) + "/sensores";
-String topic_estado   = "fanwall/" + String(MODULE_ID) + "/estado";
-String topic_control  = "fanwall/" + String(MODULE_ID) + "/control";
+String topic_status  = "fanWall/wall/" + String(MODULE_ID) + "/status";
+String topic_control = "fanWall/wall/" + String(MODULE_ID) + "/control";
+String topic_id      = "fanWall/wall/" + String(MODULE_ID) + "/id";
 
 // Clientes WiFi y MQTT
 WiFiClient espClient;

@@ -1,8 +1,0 @@
-{
-    "name": "fan-array",
-    "version": "1.0.0",
-    "scripts": {
-      "postinstall": "echo 'Running postinstall script' && cd app/static && npm install"
-    }
-}
-  
