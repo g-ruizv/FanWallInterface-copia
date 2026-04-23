@@ -13,14 +13,13 @@ from dotenv import load_dotenv
 # Load environment variables from .env file
 load_dotenv()
 
-base_dir = os.path.abspath(os.path.dirname(__file__))
+# Obtener la ruta base (la carpeta donde está app/)
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+STATIC_DIR = os.path.join(BASE_DIR, 'app', 'static')
+TEMPLATE_DIR = os.path.join(BASE_DIR, 'app', 'templates')
 
-app = Flask(
-    __name__,
-    static_folder=os.path.join(base_dir, 'static'),
-    template_folder=os.path.join(base_dir, 'templates'),
-    static_url_path='/static'
-)
+# Crear Flask con rutas absolutas
+app = Flask(__name__, static_folder=STATIC_DIR, template_folder=TEMPLATE_DIR)
 
 app.config['SECRET_KEY'] = os.getenv('SECRET_KEY')
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///fanwall.db'
