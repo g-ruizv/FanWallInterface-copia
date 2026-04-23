@@ -2,6 +2,8 @@
 
 En este documento estara contenido la informacion de todo lo necesario para ejecutar la interfaz grafica, el tunel de viento, sus configuraciones y demas caracteristicas
 
+Esta intefaz corresponde a el proyecto de FanWallInterface, que fue creado por Sebastian Trillos, en el cual el repositorio es siguiente [FanWallInterface](https://github.com/elTrillos/FanWallInterface)
+
 ## Ejecucion de la interfaz
 
 ## Prerrequisitos y Configuración Inicial
