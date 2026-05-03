@@ -125,15 +125,22 @@ function addMultipleControllers() {
         body: JSON.stringify(postData)
     })
     .then(response => {
+        if (!response.ok) {
+            throw new Error('Network response was not ok');
+        }
+        return response.json(); // PRIMERO CONVIERTE A JSON
+    })
+    .then(data => {
+        // AHORA SÍ PUEDES USAR 'data'
         if (data.error){
             showAlert(data.error, "warning");
             return;
         }
-        if (!response.ok) {
-        throw new Error('Network response was not ok');
-        }
-        return response.json();
+        console.log("Controladores añadidos:", data);
     })
+    .catch(error => {
+        console.error("Error en addMultipleControllers:", error);
+    });
 }
 
 function getConfigurations() {

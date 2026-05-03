@@ -72,6 +72,9 @@ function getGridCount(){
 }
 
 function getGridSize() {
+    // SOLUCIÓN: Si no hay elementos, el tamaño es 0x0
+    if (getGridCount() === 0) return [0, 0];
+
     var corners = getGridCorners();
     console.log(corners);
     var minX = corners[0];

@@ -176,3 +176,58 @@ function updateSmallGridItemColor(widgetId, value, colorA, colorB) {
         itemElement.style.backgroundColor = gradientColor;
     }
 }
+
+function addFanToGrid(id) {
+    // Evitar duplicados si el slider ya existe
+    if (document.getElementById(id)) return;
+
+    // El HTML que define el controlador (slider)
+    var itemHtml = `
+    <div class="grid-stack-item-content card bg-dark text-white shadow-sm">
+        <div class="card-body text-center p-2">
+            <button class="delete-button btn btn-sm btn-danger" style="position:absolute; top:5px; right:5px;" onclick="deleteWidget('${id}')">&times;</button>
+            <strong style="font-size: 0.8rem;">ID: ${id}</strong>
+            <br>
+            <input type="range" min="0" max="255" value="0" class="form-range slider" id="slider-${id}" 
+                   oninput="setControllerSpeed(this.value, '${id}')">
+            <div class="mt-1">Potencia: <span id="val-${id}">0</span></div>
+        </div>
+    </div>`;
+
+    // Añadir el widget a la cuadrícula Gridstack
+    grid.addWidget({w: 3, h: 2, content: itemHtml, id: id});
+    
+    // Registrar el ID en tu lista global si no existe
+    if (!controllerIds.includes(id)) {
+        controllerIds.push(id);
+    }
+}
+
+function addSlider(id) {
+    // Verificamos si ya existe en el grid para no duplicarlo
+    if (document.getElementById(id)) return;
+
+    getController(id).then(function(controller) {
+        // SOLUCIÓN: Si controller es null/undefined, usamos el id como nombre por defecto
+        var controllerName = (controller && controller.name) ? controller.name : id;
+        
+        var itemHtml = `
+            <div class="unavailable grid-stack-item-content">
+                <button class="delete-button" onclick="deleteWidget('${id}')">&times;</button>
+                <br><br>
+                <label class="slider-label" for="${id}">${controllerName}</label>
+                <input type="range" min="0" max="100" value="50" class="slider" id="${id}">
+            </div>`;
+            
+        // Insertamos en el grid
+        grid.addWidget({w: 2, h: 2, id: id, noResize: true, content: itemHtml});
+    }).catch(function(error) {
+        console.error("Error al cargar controlador. Creando slider por defecto:", error);
+    });
+}
+
+// Función para eliminar si haces clic en la X
+function deleteWidget(id) {
+    var el = document.querySelector(`[gs-id="${id}"]`);
+    if (el) grid.removeWidget(el);
+}

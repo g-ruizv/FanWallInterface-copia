@@ -10,18 +10,18 @@ socket.on('message', function(message) {
 
 socket.on('fanId', function(data) {
     var id = data.id;
-    console.log('Received ID:', id);
+    console.log('Received ID from server:', id);
 
-    // Handle ID received, similar to MQTT logic
     if (!controllerIds.includes(id)) {
         controllerIds.push(id);
-        console.log(controllerIds);
-        addSlider(id);
+        
+        // ¡ESTA ES LA LLAMADA CLAVE!
+        addSlider(id); 
+        
         updateControllerAvailability(id, true);
         addController(id, id);
-    }
-    else {
-        console.log('ID already exists');
+    } else {
+        console.log('ID already exists, updating availability');
         updateControllerAvailability(id, true);
     }
 });
