@@ -1,35 +1,51 @@
 import threading
+import time
 from flask_socketio import emit
 from . import mqtt_client, app, socketio
-import time
+
 last_speeds = {}
+
+# El mismo broker que tiene la placa ESP32 por defecto
+MQTT_BROKER = 'broker.emqx.io'
+MQTT_PORT = 1883
+
 def on_connect(client, userdata, flags, reason_code, properties=None):
-    print(f"Connected with result code {reason_code}")
+    print(f"Connected to MQTT broker with result code {reason_code}")
+    # Suscribirse a los tópicos del túnel de viento
     client.subscribe('fanWall/wall/control')
     client.subscribe('fanWall/wall/status')
     client.subscribe('fanWall/wall/id')
 
 def on_message(client, userdata, msg):
-    if msg.topic == 'fanWall/wall/id' and msg.payload.decode('utf-8') != 'get':
-        print(f"Received message from {msg.topic}: {msg.payload}")
+    topic = msg.topic
+    payload = msg.payload.decode('utf-8')
+    
+    # 1. Recepción de ID
+    if topic == 'fanWall/wall/id' and payload != 'get':
+        print(f"Received ID from {topic}: {payload}")
         with app.app_context():
-            socketio.emit('fanId', {'id': msg.payload.decode('utf-8')})
-    if msg.topic == 'fanWall/wall/status':
-        print(f"Received message from {msg.topic}: {msg.payload}")
-        msg.payload = msg.payload.decode('utf-8')
-        message = msg.payload.split('/')
+            socketio.emit('fanId', {'id': payload})
+            
+    # 2. Recepción de Estado (Status)
+    elif topic == 'fanWall/wall/status':
+        print(f"Received status from {topic}: {payload}")
+        message = payload.split('/')
+        
+        # Si la placa avisa que se acaba de conectar
         if message[0] == 'Connected':
+            mac_address = message[1]
             with app.app_context():
-                if message[1] not in last_speeds.keys():
-                    last_speeds[message[1]] = 0
-                send_mqtt_message('fanWall/wall/'+message[1], last_speeds[message[1]], mqtt_client)
+                # Inicializar velocidad si no existe
+                if mac_address not in last_speeds:
+                    last_speeds[mac_address] = 0
                 
-
+                # Re-enviar la última velocidad guardada a la placa recién conectada
+                send_mqtt_message(f'fanWall/wall/{mac_address}', last_speeds[mac_address], client)
 
 def on_disconnect(client, userdata, rc):
     print(f"Disconnected with result code {rc}")
     if rc != 0:
-        print("Reconnecting")
+        print("Unexpected disconnection. Reconnecting...")
         try_reconnect(client)
 
 def try_reconnect(client):
@@ -38,35 +54,27 @@ def try_reconnect(client):
             client.reconnect()
             break
         except Exception as e:
-            print(f"Reconnect failed: {e}")
+            print(f"Reconnect failed: {e}. Retrying in 5 seconds...")
             time.sleep(5)
 
-def mqtt_thread():
-    mqtt_client.on_connect = on_connect
-    mqtt_client.on_message = on_message
-    mqtt_client.connect('broker.hivemq.com', 1883)
-    print("Connected to MQTT broker")
-    mqtt_client.loop_forever()
-
-def start_mqtt():
-    mqtt_thread_instance = threading.Thread(target=mqtt_thread)
-    mqtt_thread_instance.daemon = True
-    mqtt_thread_instance.start()
-
+# Función única y limpia para iniciar MQTT
 def mqtt_start():
     with app.app_context():
         mqtt_client.on_connect = on_connect
         mqtt_client.on_message = on_message
         mqtt_client.on_disconnect = on_disconnect
-        mqtt_client.connect('broker.hivemq.com', 1883)
-        print("Connected to MQTT broker")
+        
+        # Conectar al MISMO broker que la placa
+        mqtt_client.connect(MQTT_BROKER, MQTT_PORT)
+        print(f"Connecting to MQTT broker: {MQTT_BROKER}")
         mqtt_client.loop_start()
 
-def send_mqtt_message(topic, message, client,setSpeed=False):
+def send_mqtt_message(topic, message, client, setSpeed=False):
     with app.app_context():
         print(f"Sending message to {topic}: {message}")
-        client.publish(topic, message)
+        client.publish(topic, str(message))
+        
         if setSpeed:
-            last_speeds[topic.split('/')[-1]] = message
-            print('last_speeds')
-            print(last_speeds)
+            mac_address = topic.split('/')[-1]
+            last_speeds[mac_address] = message
+            print(f'last_speeds updated: {last_speeds}')

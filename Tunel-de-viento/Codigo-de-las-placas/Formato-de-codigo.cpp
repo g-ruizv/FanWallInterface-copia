@@ -15,11 +15,11 @@
 const char* MODULE_ID = "modulo_01";
 
 // 2. Credenciales de la red WiFi
-const char* ssid = "TU_SSID";           // Nombre de tu red WiFi
-const char* password = "TU_PASSWORD";   // Contraseña de tu red WiFi
+const char* ssid = "wifi-campus";           // Nombre de tu red WiFi
+const char* password = "uandes2200";   // Contraseña de tu red WiFi
 
 // 3. Dirección IP del servidor MQTT (la PC donde corre Mosquitto y FanWallInterface)
-const char* mqtt_server = "192.168.1.100";
+const char* mqtt_server = " 10.33.9.177";
 
 // ==============================================
 

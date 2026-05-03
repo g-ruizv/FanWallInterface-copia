@@ -1,4 +1,4 @@
-var mqttClient = new Paho.MQTT.Client('broker.hivemq.com', 8884, '5a0d6a66b35b476a8653e7edb84528df');
+var mqttClient = new Paho.MQTT.Client('broker.emqx.io', 8084, 'web-client-' + Math.random().toString(16).substr(2, 8));
 
 mqttClient.onConnectionLost = function (responseObject) {
     if (responseObject.errorCode !== 0) {
